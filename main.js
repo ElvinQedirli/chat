@@ -19,7 +19,6 @@ const auth = getAuth(app)
 const db = getFirestore(app)
 
 const userList = document.querySelector('.user_list')
-const chatWindow = document.querySelector('.chat_window')
 const messagesDiv = document.querySelector('.messages')
 const form = document.querySelector('.form')
 const msgInput = document.querySelector('.message_input')
@@ -49,6 +48,10 @@ const loadUser = () => {
   const q = query(collection(db, "users"), where('uid', "!=", currentUser.uid))
   onSnapshot(q, snapshot => {
     userList.innerHTML = '';
+    if(snapshot.empty){
+        console.log('istifadeci yoxdu');
+        return
+    }
     snapshot.forEach(doc => {
       const user = doc.data();
       const userElement = document.createElement('div')
