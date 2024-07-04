@@ -3,7 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./style.css">
+   <style>body{
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    height: 100vh;
+    margin: 0;
+}
+
+
+.user_list{
+    width: 30%;
+    border-right: 1px solid black;
+    overflow-y: auto;
+}
+
+.chat_window{
+    width: 70%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.user{
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid black;
+}
+
+.messages{
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+
+.messages .message{
+    margin-bottom: 10px;
+}
+
+.form{
+    display: flex;
+}
+
+.form input{
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid black;
+}
+
+
+.send_btn{
+    padding: 8px;
+}
+</style>
     <title>Document</title>
 </head>
 <body>
@@ -12,11 +66,107 @@
     <div class="messages"></div>
     <form class="form">
       <input type="text" class="message_input" placeholder="Mesajınızı yazın...">
-      <button type="submit" class="send_button">Gönder</button>
+      <button type="button" class="send_btn">Gönder</button>
     </form>
   </div>
 
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
 
-    <script src="./main.js" type="module"></script>
+const firebaseConfig = {
+  apiKey: "Your API key",
+  authDomain: "Your authDomain",
+  projectId: "Your projectId",
+  storageBucket: "Your storageBucket",
+  messagingSenderId: "Your messagingSenderId",
+  appId: "Your appId",
+  measurementId: "Your measurementId"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const userListDiv = document.querySelector('.user_list');
+const messagesDiv = document.querySelector('.messages');
+const messageForm = document.querySelector('.form');
+const messageInput = document.querySelector('.message_input');
+let currentUser = null;
+let selectedUser = null;
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUser = user;
+    loadUsers();
+  } else {
+    signIn();
+  }
+});
+
+const signIn = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    currentUser = result.user;
+    loadUsers();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const loadUsers = () => {
+  const q = query(collection(db, "users"), where("uid", "!=", currentUser.uid));
+  onSnapshot(q, snapshot => {
+    userListDiv.innerHTML = "";
+    snapshot.forEach(doc => {
+      const user = doc.data();
+      const userDiv = document.createElement('div');
+      userDiv.classList.add('user');
+      userDiv.textContent = user.name;
+      userDiv.addEventListener('click', () => selectUser(user));
+      userListDiv.appendChild(userDiv);
+    });
+  });
+};
+
+const selectUser = (user) => {
+  selectedUser = user;
+  loadMessages();
+};
+
+const loadMessages = () => {
+  if (!selectedUser) return;
+  const q = query(collection(db, "messages"), where("from", "in", [currentUser.uid, selectedUser.uid]), where("to", "in", [currentUser.uid, selectedUser.uid]), orderBy("timestamp"));
+  onSnapshot(q, snapshot => {
+    messagesDiv.innerHTML = "";
+    snapshot.forEach(doc => {
+      const message = doc.data();
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message');
+      messageDiv.textContent = `${message.from === currentUser.uid ? "You" : selectedUser.name}: ${message.text}`;
+      messagesDiv.appendChild(messageDiv);
+    });
+  });
+};
+
+messageForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (messageInput.value && selectedUser) {
+    try {
+      await addDoc(collection(db, "messages"), {
+        from: currentUser.uid,
+        to: selectedUser.uid,
+        text: messageInput.value,
+        timestamp: serverTimestamp()
+      });
+      messageInput.value = "";
+    } catch (error) {
+      console.error(error);
+    }
+  }
+});
+    </script>
 </body>
 </html>
