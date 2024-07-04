@@ -1,7 +1,23 @@
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js'
+    import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, where } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js'
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAygqByGJW_kdLFrbaB4YXU-tOkLiO36I0",
+    authDomain: "chat-4a156.firebaseapp.com",
+    projectId: "chat-4a156",
+    storageBucket: "chat-4a156.appspot.com",
+    messagingSenderId: "384300109709",
+    appId: "1:384300109709:web:52225cc18f6d41c222b7c4",
+    measurementId: "G-78VN7EBTX5"
+};
+
+const app = initializeApp(firebaseConfig)
+const auth = getAuth(app)
+const db = getFirestore(app)
+
 
 const userList = document.querySelector('.user_list');
 const chatWindow = document.querySelector('.chat_window');
