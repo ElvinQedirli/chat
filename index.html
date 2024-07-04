@@ -140,9 +140,9 @@ const loadMessages = () => {
   if (!selectedUser) return;
 
   const q = query(collection(db, "messages"), 
-                  where("from", "==", currentUser.uid)
-                    .where("to", "==", selectedUser.uid)
-                    .orderBy("timestamp"));
+                  where("from", "==", currentUser.uid),
+                  where("to", "==", selectedUser.uid),
+                  orderBy("timestamp"));
 
   onSnapshot(q, snapshot => {
     messagesDiv.innerHTML = "";
@@ -155,6 +155,7 @@ const loadMessages = () => {
     });
   });
 };
+
 
 
 messageForm.addEventListener('submit', async (e) => {
