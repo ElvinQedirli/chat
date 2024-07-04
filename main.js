@@ -4,12 +4,13 @@ import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTim
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyArnY_Q-haLbnaIJwSOgr3p9NovVw9_wYU",
-    authDomain: "chat-82f46.firebaseapp.com",
-    projectId: "chat-82f46",
-    storageBucket: "chat-82f46.appspot.com",
-    messagingSenderId: "876618560894",
-    appId: "1:876618560894:web:3d7aa767978e528656af2f"
+    apiKey: "AIzaSyAygqByGJW_kdLFrbaB4YXU-tOkLiO36I0",
+    authDomain: "chat-4a156.firebaseapp.com",
+    projectId: "chat-4a156",
+    storageBucket: "chat-4a156.appspot.com",
+    messagingSenderId: "384300109709",
+    appId: "1:384300109709:web:52225cc18f6d41c222b7c4",
+    measurementId: "G-78VN7EBTX5"
 };
 
 const app = initializeApp(firebaseConfig)
@@ -42,21 +43,25 @@ onAuthStateChanged(auth, user => {
 
 const signIn = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider)
+    try {
+        await signInWithPopup(auth, provider)
+    } catch (error) {
+        console.error('hesab xetasi', error);
+    }
 }
 
 
 const loadUser = () => {
-    const q = query(collection(db, 'users'), where('uid', "!=", currentUser.uid))
+    const q = query(collection(db, "users"), where('uid', "!=", currentUser.uid))
     onSnapshot(q, snapshot => {
         userList.innerHTML = '';
-        snapshot.forEach(doc=>{
+        snapshot.forEach(doc => {
             const user = doc.data();
             const userElement = document.createElement('div')
             userElement.classList.add('user')
             userElement.textContent = user.name;
             userElement.addEventListener('click', () => selectUser(user))
-        userList.appendChild(userElement)
+            userList.appendChild(userElement)
         })
     })
 }
@@ -69,34 +74,39 @@ const selectUser = (user) => {
 
 
 const loadMessages = () => {
-    const q = query(collection(db, 'messages'), where('from', 'in', [currentUser.uid, selectedUser.uid]), 
-    where('to', 'in', [currentUser.uid, selectedUser.uid]), 
-    orderBy('timestamp'));
+    const q = query(collection(db, 'messages'), where('from', 'in', [currentUser.uid, selectedUser.uid]),
+        where('to', 'in', [currentUser.uid, selectedUser.uid]),
+        orderBy('timestamp'));
 
-    onSnapshot(q,snapshot=>{
-messagesDiv.innerHTML = ""
+    onSnapshot(q, snapshot => {
+        messagesDiv.innerHTML = ""
 
-snapshot.forEach(doc=>{
-    const message = doc.data();
-    const messageElement=document.createElement('div')
-    messageElement.classList.add('message')
-    messageElement.textContent=`${message.from === currentUser.uid ? 'You' : selectedUser.name}: ${message.text}`
-    messagesDiv.appendChild(messageElement)
-})
+        snapshot.forEach(doc => {
+            const message = doc.data();
+            const messageElement = document.createElement('div')
+            messageElement.classList.add('message')
+            messageElement.textContent = `${message.from === currentUser.uid ? 'You' : selectedUser.name}: ${message.text}`
+            messagesDiv.appendChild(messageElement)
+        })
     })
 
 }
 
-form.addEventListener('submit', async(e)=>{
+form.addEventListener('submit', async (e) => {
     e.preventDefault()
-    if(msgInput.value && selectedUser){
-        await addDoc(collection(db, "messages"),{
-            from: currentUser.uid,
-            to: selectedUser.uid,
-            text:msgInput.value,
-            timestamp: serverTimestamp()
-        })
-        msgInput.value=""
+    if (msgInput.value && selectedUser) {
+        try {
+            await addDoc(collection(db, "messages"), {
+                from: currentUser.uid,
+                to: selectedUser.uid,
+                text: msgInput.value,
+                timestamp: serverTimestamp()
+            })
+            msgInput.value = ""
+        } catch (error) {
+            console.error('gonderme xetasi', error);
+        }
+
     }
 
     console.log('dfghjk');
