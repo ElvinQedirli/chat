@@ -70,110 +70,121 @@
     </form>
   </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAygqByGJW_kdLFrbaB4YXU-tOkLiO36I0",
-            authDomain: "chat-4a156.firebaseapp.com",
-            projectId: "chat-4a156",
-            storageBucket: "chat-4a156.appspot.com",
-            messagingSenderId: "384300109709",
-            appId: "1:384300109709:web:52225cc18f6d41c222b7c4",
-            measurementId: "G-78VN7EBTX5"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyAygqByGJW_kdLFrbaB4YXU-tOkLiO36I0",
+        authDomain: "chat-4a156.firebaseapp.com",
+        projectId: "chat-4a156",
+        storageBucket: "chat-4a156.appspot.com",
+        messagingSenderId: "384300109709",
+        appId: "1:384300109709:web:52225cc18f6d41c222b7c4",
+        measurementId: "G-78VN7EBTX5"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        const userListDiv = document.querySelector('.user_list');
-        const messagesDiv = document.querySelector('.messages');
-        const messageForm = document.querySelector('.form');
-        const messageInput = document.querySelector('.message_input');
-        let currentUser = null;
-        let selectedUser = null;
+    const userListDiv = document.querySelector('.user_list');
+    const messagesDiv = document.querySelector('.messages');
+    const messageForm = document.querySelector('.form');
+    const messageInput = document.querySelector('.message_input');
+    let currentUser = null;
+    let selectedUser = null;
 
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                currentUser = user;
-                loadUsers();
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            currentUser = user;
+            loadUsers();
+        } else {
+            signIn();
+        }
+    });
+
+    const signIn = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            currentUser = result.user;
+            await addDoc(collection(db, "users"), {
+                uid: currentUser.uid,
+                name: currentUser.displayName
+            });
+            loadUsers();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const loadUsers = () => {
+        const q = query(collection(db, "users"), where("uid", "!=", currentUser.uid));
+        onSnapshot(q, snapshot => {
+            userListDiv.innerHTML = "";
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const userDiv = document.createElement('div');
+                userDiv.classList.add('user');
+                userDiv.textContent = user.name;
+                userDiv.addEventListener('click', () => selectUser(user));
+                userListDiv.appendChild(userDiv);
+            });
+        });
+    };
+
+    const selectUser = (user) => {
+        selectedUser = user;
+        loadMessages();
+    };
+
+    const loadMessages = () => {
+        if (!selectedUser) return;
+
+        const q = query(
+            collection(db, "messages"),
+            where("from", "in", [currentUser.uid, selectedUser.uid]),
+            where("to", "in", [currentUser.uid, selectedUser.uid]),
+            orderBy("timestamp")
+        );
+
+        onSnapshot(q, snapshot => {
+            messagesDiv.innerHTML = "";
+            snapshot.forEach(doc => {
+                const message = doc.data();
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.textContent = `${message.from === currentUser.uid ? "You" : selectedUser.name}: ${message.text}`;
+                messagesDiv.appendChild(messageDiv);
+            });
+        }, error => {
+            if (error.code === 'failed-precondition') {
+                console.error("The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/chat-4a156/firestore/indexes?create_composite=Cktwcm9qZWN0cy9jaGF0LTRhMTU2L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9tZXNzYWdlcy9pbmRleGVzL18QARoICgRmcm9tEAEaBgoCdG8QARoNCgl0aW1lc3RhbXAQARoMCghfX25hbWVfXxAB");
             } else {
-                signIn();
+                console.error(error);
             }
         });
+    };
 
-        const signIn = async () => {
-            const provider = new GoogleAuthProvider();
+    messageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (messageInput.value && selectedUser) {
             try {
-                const result = await signInWithPopup(auth, provider);
-                currentUser = result.user;
-                loadUsers();
+                await addDoc(collection(db, "messages"), {
+                    from: currentUser.uid,
+                    to: selectedUser.uid,
+                    text: messageInput.value,
+                    timestamp: serverTimestamp()
+                });
+                messageInput.value = "";
             } catch (error) {
                 console.error(error);
             }
-        };
+        }
+    });
+</script>
 
-        const loadUsers = () => {
-            const q = query(collection(db, "users"), where("uid", "!=", currentUser.uid));
-            onSnapshot(q, snapshot => {
-                userListDiv.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const userDiv = document.createElement('div');
-                    userDiv.classList.add('user');
-                    userDiv.textContent = user.name;
-                    userDiv.addEventListener('click', () => selectUser(user));
-                    userListDiv.appendChild(userDiv);
-                });
-            });
-        };
-
-        const selectUser = (user) => {
-            selectedUser = user;
-            loadMessages();
-        };
-
-        const loadMessages = () => {
-            if (!selectedUser) return;
-
-            const q = query(
-                collection(db, "messages"),
-                where("from", "==", currentUser.uid),
-                where("to", "==", selectedUser.uid),
-                orderBy("timestamp")
-            );
-
-            onSnapshot(q, snapshot => {
-                messagesDiv.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const message = doc.data();
-                    const messageDiv = document.createElement('div');
-                    messageDiv.classList.add('message');
-                    messageDiv.textContent = `${message.from === currentUser.uid ? "You" : selectedUser.name}: ${message.text}`;
-                    messagesDiv.appendChild(messageDiv);
-                });
-            });
-        };
-
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (messageInput.value && selectedUser) {
-                try {
-                    await addDoc(collection(db, "messages"), {
-                        from: currentUser.uid,
-                        to: selectedUser.uid,
-                        text: messageInput.value,
-                        timestamp: serverTimestamp()
-                    });
-                    messageInput.value = "";
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-        });
-    </script>
 </body>
 </html>
