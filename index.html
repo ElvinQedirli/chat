@@ -65,8 +65,8 @@
   <div class="chat_window">
     <div class="messages"></div>
     <form class="form">
-      <input type="text" class="message_input" placeholder="Mesajınızı yazın...">
-      <button type="button" class="send_btn">Gönder</button>
+      <input type="text" class="message_input" placeholder="Mesaj yazın...">
+      <button type="button" class="send_btn">Gonder</button>
     </form>
   </div>
 
@@ -116,7 +116,7 @@
             });
             loadUsers();
         } catch (error) {
-            console.error('Error signing in:', error);
+            console.error('Giris zamani xeta:', error);
         }
     };
 
@@ -137,14 +137,14 @@
 
     const selectUser = (user) => {
         selectedUser = user;
-        console.log('Selected user:', selectedUser.name);
+        console.log('secilmis user:', selectedUser.name);
         loadMessages();
     };
 
     const loadMessages = () => {
         if (!selectedUser) return;
 
-        console.log('Loading messages for selected user:', selectedUser.name);
+        console.log('secilmis userden mesajlar yuklenir:', selectedUser.name);
 
         const q1 = query(
             collection(db, "messages"),
@@ -161,7 +161,7 @@
         );
 
         onSnapshot(q1, snapshot => {
-            console.log('Messages from you to selected user:', snapshot.size);
+            console.log('secilmis userin mesajlari:', snapshot.size);
             messagesDiv.innerHTML = "";
             snapshot.forEach(doc => {
                 const message = doc.data();
@@ -173,7 +173,7 @@
         });
 
         onSnapshot(q2, snapshot => {
-            console.log('Messages from selected user to you:', snapshot.size);
+            console.log('secilmis userden gelen mesajlar:', snapshot.size);
             snapshot.forEach(doc => {
                 const message = doc.data();
                 const messageDiv = document.createElement('div');
@@ -194,15 +194,15 @@
                     text: messageInput.value,
                     timestamp: serverTimestamp()
                 });
-                console.log('Message sent:', messageInput.value);
+                console.log('Mesaj gonderildi:', messageInput.value);
                 messageInput.value = "";
             } catch (error) {
-                console.error('Error sending message:', error);
+                console.error('mesaj gonderilme zamano xeta:', error);
             }
         } else {
-            console.warn('No message to send or no user selected');
+            console.warn('mesaj yoxdur ve ya user secilmeyib');
         }
-        console.log("sasa");
+        // console.log("sasa");
 
     });
 </script>
