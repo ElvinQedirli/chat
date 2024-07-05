@@ -91,7 +91,7 @@
 
     const userListDiv = document.querySelector('.user_list');
     const messagesDiv = document.querySelector('.messages');
-    const messageForm = document.querySelector('.form');
+    const sendBtn = document.querySelector('.send_btn');
     const messageInput = document.querySelector('.message_input');
     let currentUser = null;
     let selectedUser = null;
@@ -184,7 +184,7 @@
         });
     };
 
-    messageForm.addEventListener('submit', async (e) => {
+    sendBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         if (messageInput.value && selectedUser) {
             try {
