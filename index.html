@@ -116,7 +116,7 @@
             });
             loadUsers();
         } catch (error) {
-            console.error(error);
+            console.error('Error signing in:', error);
         }
     };
 
@@ -137,11 +137,14 @@
 
     const selectUser = (user) => {
         selectedUser = user;
+        console.log('Selected user:', selectedUser.name);
         loadMessages();
     };
 
     const loadMessages = () => {
         if (!selectedUser) return;
+
+        console.log('Loading messages for selected user:', selectedUser.name);
 
         const q1 = query(
             collection(db, "messages"),
@@ -158,6 +161,7 @@
         );
 
         onSnapshot(q1, snapshot => {
+            console.log('Messages from you to selected user:', snapshot.size);
             messagesDiv.innerHTML = "";
             snapshot.forEach(doc => {
                 const message = doc.data();
@@ -169,6 +173,7 @@
         });
 
         onSnapshot(q2, snapshot => {
+            console.log('Messages from selected user to you:', snapshot.size);
             snapshot.forEach(doc => {
                 const message = doc.data();
                 const messageDiv = document.createElement('div');
@@ -189,13 +194,17 @@
                     text: messageInput.value,
                     timestamp: serverTimestamp()
                 });
+                console.log('Message sent:', messageInput.value);
                 messageInput.value = "";
             } catch (error) {
-                console.error(error);
+                console.error('Error sending message:', error);
             }
+        } else {
+            console.warn('No message to send or no user selected');
         }
     });
 </script>
+
 
 
 </body>
