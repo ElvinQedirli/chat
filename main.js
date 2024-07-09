@@ -2,6 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.14.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-firestore.js";
 
+
+// basqa userler mesaj gondere biilmir no:130
+// const q = query(collection(db, "users"), where("uid", "!==", currentUser.uid)); bu koda bax, mebde oz adim da cixir digerlerinde yox
 const firebaseConfig = {
     apiKey: "AIzaSyAygqByGJW_kdLFrbaB4YXU-tOkLiO36I0",
     authDomain: "chat-4a156.firebaseapp.com",
@@ -48,7 +51,7 @@ const signIn = async () => {
 };
 
 const loadUsers = () => {
-    const q = query(collection(db, "users"), where("uid", "!=", currentUser.uid));
+    const q = query(collection(db, "users"), where("uid", "!==", currentUser.uid));
     onSnapshot(q, snapshot => {
         userListDiv.innerHTML = "";
         snapshot.forEach(doc => {
